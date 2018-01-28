@@ -11,6 +11,7 @@ public class MainActivity extends AppCompatActivity {
     TextView tvExp, tvResult;
     String expression = "0", result = "0", temp = "0";
     int numberCount;
+    boolean operatorIsClicked;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,14 +28,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private String checkNumberPrefix(String num) {
-        if (num.matches("0[0-9]"))
+        if (num.matches("0\\d+.*"))
             num = num.substring(1);
 
         return num;
     }
 
     private String checkPoint(String numOrExp) {
-        if (numOrExp.matches(".+(\\.){2}$"))
+        if (numOrExp.matches(".+(\\.){2}$") || numOrExp.matches(".+(\\.\\d+\\.)$"))
             numOrExp = numOrExp.substring(0, numOrExp.length() - 1);
 
         if (numOrExp.matches(".+[\\+\\-x/]\\."))
@@ -51,33 +52,38 @@ public class MainActivity extends AppCompatActivity {
             else
                 return numOrExp;
         } catch (NumberFormatException e) {
+            System.out.println("e = " + e);
             return numOrExp;
         }
     }
 
     public void onNumberClick(View view) {
-        if(!expression.contains("Infinity")&&!expression.contains("NaN")) {
+        if (!expression.contains("Infinity") && !expression.contains("NaN")) {
             String num = ((Button) view).getText().toString();
-            expression += num;
-            expression = checkPoint(expression);
             temp += num;
             temp = checkPoint(temp);
             temp = checkNumberPrefix(temp);
-            expression = checkNumberPrefix(expression);
             tvResult.setText(temp);
         }
+        operatorIsClicked = false;
     }
 
     public void onOperatorClick(View view) {
-        if(!expression.contains("Infinity")&&!expression.contains("NaN")) {
+        if (!expression.contains("Infinity") && !expression.contains("NaN")) {
             temp = checkInteger(temp);
+            if (!operatorIsClicked) {
+                expression += temp;
+            }
+            expression = checkNumberPrefix(expression);
             concatenate(view);
             show();
         }
+        operatorIsClicked = true;
     }
 
     public void onEqual(View view) {
-        if(!expression.contains("Infinity")&&!expression.contains("NaN")) {
+        expression += temp;
+        if (!expression.contains("Infinity") && !expression.contains("NaN")) {
             calc();
             expression = checkInteger(result + "");
 
@@ -97,7 +103,8 @@ public class MainActivity extends AppCompatActivity {
             expression = expression.substring(0, expression.length() - 2) +
                 expression.substring(expression.length() - 1);
         }
-        calc();
+        if (!operatorIsClicked)
+            calc();
     }
 
     String getOperator() {
@@ -149,12 +156,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     void show() {
-        expression = checkInteger(expression);
+        expression = checkNumberPrefix(expression);
         tvExp.setText(expression);
         tvResult.setText(checkInteger(result + ""));
     }
 
     public void onClear(View view) {
+        operatorIsClicked = false;
         result = "0";
         temp = "0";
         numberCount = 0;
